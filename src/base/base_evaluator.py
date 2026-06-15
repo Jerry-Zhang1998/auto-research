@@ -14,7 +14,8 @@ class BaseEvaluator:
     """
     Usage:
 
-        evaluator = BaseEvaluator(model, device="cuda", task="classification")
+        evaluator = BaseEvaluator(model, task="classification")
+        evaluator.load_checkpoint("logs/my-paper/run_0/ckpt_best.pt")
         results = evaluator.evaluate(test_loader)
         evaluator.save_results(results, "logs/my-paper/run_0/test_results.json")
     """
@@ -23,47 +24,69 @@ class BaseEvaluator:
         self,
         model: nn.Module,
         device: Optional[torch.device] = None,
-        task: str = "classification",   # "classification" | "regression"
+        task: str = "classification",
     ):
-        self.model = model
+        self.model  = model
         self.device = device or torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.task = task
+        self.task   = task
         self.model.to(self.device)
         self.model.eval()
 
-    def evaluate(self, loader: DataLoader) -> Dict[str, float]:
-        all_logits: List[torch.Tensor] = []
+    def load_checkpoint(self, path: str, map_location: Optional[str] = None) -> Dict:
+        loc  = map_location or str(self.device)
+        ckpt = torch.load(path, map_location=loc)
+        key  = "model" if "model" in ckpt else "model_state"
+        self.model.load_state_dict(ckpt[key])
+        print(f"  Loaded epoch={ckpt.get('epoch','?')} step={ckpt.get('step','?')} from {path}")
+        return ckpt
+
+    def evaluate(self, loader: DataLoader) -> Dict:
+        """
+        Returns a dict suitable for save_results():
+            {
+              "metrics":  {auc, accuracy, f1, precision, recall, auc_pr},
+              "curves":   {roc: {fpr, tpr}, pr: {precision, recall}},   # binary only
+              "confusion": [[...]],   # int matrix, classification only
+            }
+        """
+        all_logits:  List[torch.Tensor] = []
         all_targets: List[torch.Tensor] = []
 
         with torch.no_grad():
             for batch in loader:
                 inputs, targets = self._unpack(batch)
-                inputs = self._to_device(inputs)
-                logits = self.model(inputs)
-                all_logits.append(logits.cpu())
+                inputs  = self._to_device(inputs)
+                outputs = self.model(inputs)
+                all_logits.append(outputs.cpu())
                 all_targets.append(targets.cpu())
 
         logits  = torch.cat(all_logits,  dim=0)
         targets = torch.cat(all_targets, dim=0)
 
+        results: Dict[str, Any] = {}
+
         if self.task == "classification":
-            metrics = ClassificationMetrics.compute_all(targets, logits)
+            results["metrics"]   = ClassificationMetrics.compute_all(targets, logits)
+            results["curves"]    = ClassificationMetrics.compute_curves(targets, logits)
+            results["confusion"] = ClassificationMetrics.compute_confusion_matrix(targets, logits)
         else:
-            metrics = RegressionMetrics.compute_all(targets, logits)
+            results["metrics"]   = RegressionMetrics.compute_all(targets, logits)
+            results["curves"]    = {}
+            results["confusion"] = []
 
-        self._print_results(metrics)
-        return metrics
+        self._print_results(results["metrics"])
+        return results
 
-    def save_results(self, results: Dict[str, float], path: str) -> None:
-        os.makedirs(os.path.dirname(path), exist_ok=True)
+    def save_results(self, results: Dict, path: str) -> None:
+        os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
         with open(path, "w") as f:
             json.dump(results, f, indent=2)
-        print(f"Test results saved → {path}")
+        print(f"  Test results → {path}")
 
-    # ── Helpers ──────────────────────────────────────────────────────────────
+    # ── Helpers ───────────────────────────────────────────────────────────────
 
     def _unpack(self, batch: Any):
-        if isinstance(batch, (list, tuple)) and len(batch) == 2:
+        if isinstance(batch, (list, tuple)) and len(batch) >= 2:
             return batch[0], batch[1]
         raise ValueError(f"Expected (inputs, targets) batch, got {type(batch)}")
 
@@ -76,7 +99,10 @@ class BaseEvaluator:
 
     @staticmethod
     def _print_results(metrics: Dict[str, float]) -> None:
-        print("\n── Test Results " + "─" * 40)
+        print("\n" + "═" * 50)
+        print("  TEST RESULTS")
+        print("─" * 50)
         for k, v in metrics.items():
-            print(f"  {k:<25} {v:.6f}")
-        print("─" * 56)
+            bar = "█" * int(v * 20) if 0 <= v <= 1 else ""
+            print(f"  {k:<20}  {v:.6f}  {bar}")
+        print("═" * 50)

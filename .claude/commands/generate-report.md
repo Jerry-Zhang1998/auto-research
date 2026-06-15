@@ -1,21 +1,26 @@
 # generate-report
 
-Generate a formatted HTML summary report and standalone model.py for a paper.
-Output goes to `outputs/{name}/summary.html` and `outputs/{name}/model.py`.
+Generate all HTML output files and standalone model.py for a paper.
+
+Output: `outputs/{name}/summary.html`, `outputs/{name}/model.py`, `outputs/{name}/train.html`, `outputs/{name}/evaluate.html`
 
 ## Arguments
 
 $ARGUMENTS
 
-First argument: paper name slug (e.g. `attention-is-all-you-need`). Must have a completed `analyses/{name}/innovations.md`.
+First argument: paper name slug (e.g. `attention-is-all-you-need`). Must have `analyses/{name}/innovations.md`.
 
 ## Steps
 
 **Step 1 — Load inputs.**
 
-Read `analyses/{name}/innovations.md`. If missing, tell the user to run `/analyze-innovations {name}` first.
-Read `analyses/{name}/raw.md` for supplemental detail.
-Read `prompts/html_report_system.md` for HTML design rules.
+Read these reference files before generating anything:
+1. `analyses/{name}/innovations.md` — primary source. If missing: tell user to run `/analyze-innovations {name}` first.
+2. `analyses/{name}/raw.md` — supplemental detail.
+3. `prompts/html_report_system.md` — HTML design rules (dark theme, self-contained, no CDN).
+4. `outputs/_template/summary.html` — **reference template**: follow its CSS variables, class names, and section structure exactly.
+5. `outputs/_template/evaluate.html` — shows the metric card + ROC/PR chart layout.
+6. `outputs/_template/train.html` — shows the loss curve + metric chart layout.
 
 **Step 2 — Create output directory.**
 
@@ -471,7 +476,20 @@ Check if `reproductions/{name}/model.py` already exists:
 
 The `outputs/{name}/model.py` must be self-contained: include all imports, the `ModelConfig` dataclass, all sub-modules, and the top-level model class. Add a `if __name__ == "__main__":` block that instantiates the model and prints parameter count + a sample forward pass shape.
 
-**Step 5 — Confirm.**
+**Step 5 — Generate training and evaluation visualisations.**
+
+Check whether training logs exist for this paper:
+
+```bash
+find logs/{name} -name "metrics.jsonl" | sort | tail -1
+find logs/{name} -name "test_results.json" | sort | tail -1
+```
+
+- **If `metrics.jsonl` found**: run `python3 scripts/generate_viz.py --log-dir <that_dir> --output-dir outputs/{name}` to generate `train.html` and `evaluate.html`.
+- **If `test_results.json` not found**: note that `evaluate.html` will be skipped; the user should run `python test.py` in `reproductions/{name}/` first, then re-run `/generate-report {name}`.
+- **If no logs at all**: skip this step and note it in the confirmation output.
+
+**Step 6 — Confirm.**
 
 Run `find outputs/{name} -type f | sort` to list output files.
 
@@ -479,9 +497,13 @@ Print:
 ```
 ✓ Report generated
   outputs/{name}/
-  ├── summary.html   (self-contained HTML, dark theme)
-  └── model.py       (standalone PyTorch model)
+  ├── summary.html    innovation analysis (self-contained dark-theme HTML)
+  ├── model.py        standalone PyTorch model
+  ├── train.html      training curves (loss, AUC, LR)         [if logs exist]
+  └── evaluate.html   ROC/PR curves, confusion matrix, metrics [if test_results.json exists]
 
   Open in browser:
     open outputs/{name}/summary.html
+    open outputs/{name}/train.html
+    open outputs/{name}/evaluate.html
 ```

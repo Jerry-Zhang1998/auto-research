@@ -11,11 +11,16 @@ First argument: paper name slug (e.g. `attention-is-all-you-need`). Must match a
 
 ## Steps
 
-**Step 1 — Load the analysis.**
+**Step 1 — Load all reference material.**
 
-Read `analyses/{name}/innovations.md`. If missing, tell the user to run `/analyze-innovations {name}` first.
-Also read `analyses/{name}/raw.md` for implementation-level details.
-Read `prompts/reproduce_system.md` for code generation guidelines.
+Read in this order:
+1. `analyses/{name}/innovations.md` — source of truth for the paper. If missing, tell the user to run `/analyze-innovations {name}` first.
+2. `analyses/{name}/raw.md` — for implementation-level details missed in the analysis.
+3. `prompts/reproduce_system.md` — code generation standards to follow exactly.
+4. `reproductions/_template/train.py` — **reference template**: shows the exact BaseTrainer subclass pattern to follow for `train.py`.
+5. `reproductions/_template/test.py` — **reference template**: shows the exact BaseEvaluator pattern to follow for `test.py`.
+6. `src/base/base_trainer.py` — understand the interface: which methods are abstract, what keys `train_step` must return.
+7. `src/base/base_evaluator.py` — understand `load_checkpoint` and `evaluate` signatures.
 
 **Step 2 — Create the reproduction directory.**
 
@@ -23,7 +28,12 @@ Run: `mkdir -p reproductions/{name}`
 
 **Step 3 — Generate each file.**
 
-Generate all files below. Each file must be complete, runnable, and well-structured. No placeholder TODOs — implement every component described in the analysis. Use type hints throughout.
+Generate all 7 files below. Rules:
+- No placeholder TODOs — implement every component described in the analysis.
+- Use type hints throughout.
+- `config.py`, `model.py`, `loss.py`, `dataset.py` are fully paper-specific — write them from scratch based on the paper.
+- `train.py` and `test.py` must follow the template pattern exactly (subclass BaseTrainer / use BaseEvaluator) — do NOT rewrite the training loop; that logic lives in `src/base/`.
+- First line of `train.py` and `test.py`: `sys.path.insert(0, os.path.normpath(os.path.join(os.path.dirname(__file__), "..", "..")))`
 
 ---
 
