@@ -26,7 +26,19 @@ Read these reference files before generating anything:
 
 Run: `mkdir -p outputs/{name}`
 
-**Step 3 — Generate `outputs/{name}/summary.html`.**
+**Step 3 — Extract architecture figure.**
+
+Before generating the HTML, check for an extracted figure:
+
+```bash
+python3 scripts/extract_figures.py papers/{name}.pdf analyses/{name}/
+```
+
+Parse the JSON output and get `arch_figure`. If `arch_figure` has a `b64` field (non-null), you have a base64-encoded PNG to embed. Store it as `ARCH_B64` and `ARCH_CAPTION`.
+
+If `extract_figures.py` fails (PyMuPDF not installed), set `ARCH_B64 = null`. The architecture section will fall back to text-only.
+
+**Step 4 — Generate `outputs/{name}/summary.html`.**
 
 Write a complete, self-contained HTML file. All CSS must be inlined in `<style>` — no external URLs, no CDN links. The file must render correctly when opened directly in a browser without internet access.
 
@@ -156,7 +168,29 @@ section { margin-bottom: 44px; }
 .contribution .contrib-title { font-weight: 700; color: var(--accent3); margin-bottom: 6px; }
 .contribution .contrib-why { font-size: 0.875rem; color: var(--text-muted); margin-top: 6px; }
 
-/* ── Architecture ── */
+/* ── Architecture figure from paper ── */
+.figure-block {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 16px;
+  text-align: center;
+}
+.arch-figure {
+  max-width: 100%;
+  height: auto;
+  border-radius: 6px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+}
+.figure-caption {
+  margin-top: 12px;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  font-style: italic;
+}
+
+/* ── Architecture components ── */
 .arch-component {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -343,12 +377,24 @@ strong { color: #fff; }
     <h2>3. Model Architecture</h2>
   </div>
 
+  <!-- ① Paper figure (if extracted) — INSERT WHEN ARCH_B64 IS NOT NULL -->
+  <!-- Replace the entire block below with actual base64 data when available -->
+  <!-- IF ARCH_B64 IS NOT NULL:
+  <div class="figure-block">
+    <img src="data:image/png;base64,{ARCH_B64}"
+         alt="Model Architecture — extracted from paper"
+         class="arch-figure">
+    <div class="figure-caption">{ARCH_CAPTION}</div>
+  </div>
+  -->
+  <!-- IF ARCH_B64 IS NULL: omit the figure-block entirely -->
+
   <div class="card">
     <h3>High-Level Design</h3>
     <p>{OVERALL ARCHITECTURE DESCRIPTION}</p>
   </div>
 
-  <!-- Architecture Diagram -->
+  <!-- ASCII diagram as fallback / supplement -->
   <div class="equation">{ASCII ARCHITECTURE DIAGRAM}</div>
 
   <!-- One .arch-component per key component -->

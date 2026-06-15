@@ -2,9 +2,18 @@
 paper: {title}
 name: {name}
 analyzed: {YYYY-MM-DD}
+github: {https://github.com/... or "not found"}
 ---
 
 # Innovation Analysis: {title}
+
+## 0. Repository
+
+- **GitHub**: {https://github.com/... or "not found"}
+- **Status**: official | not-found
+- **Notes**: {branch, key files, extra dependencies, or "N/A"}
+
+---
 
 ## 1. Problem Statement
 

@@ -8,14 +8,18 @@ Full pipeline: PDF/arxiv → structured innovation analysis → PyTorch code rep
 /parse-paper <pdf_path|arxiv_url> [name]
       ↓  papers/{name}.pdf + analyses/{name}/raw.md
 /analyze-innovations <name>
-      ↓  analyses/{name}/innovations.md
+      ↓  analyses/{name}/innovations.md  (+ github URL if found in paper)
 /reproduce-code <name>
-      ↓  reproductions/{name}/{model,loss,train,config,dataset}.py  (PyTorch)
+      ↓  reproductions/{name}/  (PyTorch; uses official GitHub repo if available)
 /generate-report <name>
-      ↓  outputs/{name}/summary.html + outputs/{name}/model.py
+      ↓  outputs/{name}/summary.html + model.py + train.html + evaluate.html
 
 # Or run all four at once:
 /auto-research <pdf_path|arxiv_url> [name]
+
+# If reproduction code fails at runtime:
+/fix-reproduction <name> [run_name] [max_attempts]
+      ↓  auto-diagnose error → patch code → verify → repeat up to N times
 ```
 
 ## Directory Layout
@@ -29,13 +33,18 @@ auto-research/
 │       ├── analyze-innovations.md
 │       ├── reproduce-code.md
 │       ├── generate-report.md
+│       ├── fix-reproduction.md  # runtime error auto-fix loop
 │       └── auto-research.md   # 4-stage orchestrator
 ├── papers/                    # input PDFs (auto-saved by parse-paper)
 ├── analyses/
 │   ├── _template/             # blank template for reference
 │   │   ├── raw.md             # extracted paper text + sections
-│   │   └── innovations.md     # structured innovation analysis
+│   │   └── innovations.md     # structured innovation analysis (includes Section 0: Repository)
 │   └── {paper_name}/          # one folder per paper
+│       ├── raw.md             # extracted paper text
+│       ├── innovations.md     # structured analysis (github URL in Section 0)
+│       ├── figures/           # extracted PDF figures (manifest.json + fig_*.png)
+│       └── _official_repo/    # official GitHub repo (cloned by /reproduce-code if URL found)
 ├── reproductions/
 │   ├── _template/             # reference pattern (skills read this when generating code)
 │   │   ├── config.py          # dataclass hyperparameter template
@@ -93,6 +102,10 @@ auto-research/
 ├── scripts/
 │   ├── fetch_paper.py         # arxiv fetch or local PDF copy
 │   ├── parse_pdf.py           # PDF → structured text
+│   ├── extract_figures.py     # PyMuPDF figure extraction + arch scoring
+│   ├── generate_viz.py        # metrics.jsonl + test_results.json → train/evaluate HTML
+│   ├── fetch_repo.py          # clone GitHub repo + analyze structure → JSON
+│   ├── parse_errors.py        # parse Python traceback from log → JSON
 │   └── utils.py               # shared helpers
 └── prompts/
     ├── parse_system.md        # section extraction prompt
@@ -106,15 +119,16 @@ auto-research/
 | Skill | Input | Output |
 |-------|-------|--------|
 | `/parse-paper` | PDF path or arxiv URL | `analyses/{name}/raw.md` |
-| `/analyze-innovations` | paper name | `analyses/{name}/innovations.md` |
-| `/reproduce-code` | paper name | `reproductions/{name}/` (PyTorch) |
-| `/generate-report` | paper name | `outputs/{name}/summary.html` + `model.py` |
+| `/analyze-innovations` | paper name | `analyses/{name}/innovations.md` (with GitHub URL) |
+| `/reproduce-code` | paper name | `reproductions/{name}/` (PyTorch; official repo if available) |
+| `/generate-report` | paper name | `outputs/{name}/summary.html` + `model.py` + viz HTML |
 | `/auto-research` | PDF path or arxiv URL | all four stages |
+| `/fix-reproduction` | paper name [run] [attempts] | patches failing code until it runs |
 
 ## Setup
 
 ```bash
-pip install pdfplumber requests arxiv
+pip install pdfplumber requests arxiv pymupdf
 ```
 
 ## Conventions

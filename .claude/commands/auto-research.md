@@ -49,7 +49,8 @@ Print on completion:
 Execute the full logic of the `/analyze-innovations` skill inline:
 
 - Read `analyses/{name}/raw.md` and `prompts/innovations_system.md`
-- Produce the complete structured innovation analysis
+- Search raw.md for any `github.com` URL — record as the official repo URL (or "not found")
+- Produce the complete structured innovation analysis including Section 0 (Repository)
 - Write `analyses/{name}/innovations.md`
 
 Print on completion:
@@ -65,9 +66,10 @@ Print on completion:
 
 Execute the full logic of the `/reproduce-code` skill inline. Framework is always PyTorch — do not use JAX or any other framework.
 
+- Check innovations.md Section 0 for GitHub URL; if present, run `python3 scripts/fetch_repo.py {url} analyses/{name}/` and use official model/loss as the base
 - Read `analyses/{name}/innovations.md` and `prompts/reproduce_system.md`
 - Create `reproductions/{name}/` directory
-- Generate all 6 files: config.py, model.py, loss.py, dataset.py, train.py, README.md
+- Generate all 7 files: config.py, model.py, loss.py, dataset.py, train.py, test.py, README.md
 
 Print on completion:
 ```
@@ -135,5 +137,8 @@ TO RUN THE REPRODUCTION
   cd reproductions/{name}
   pip install torch  # + any extra deps in README.md
   python train.py
+
+IF TRAINING FAILS (auto-fix runtime errors)
+  /fix-reproduction {name}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```

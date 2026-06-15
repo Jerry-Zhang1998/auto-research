@@ -16,6 +16,18 @@ Read `analyses/{name}/raw.md`. If the file does not exist, tell the user to run 
 
 Also read the analysis prompt schema from `prompts/innovations_system.md`.
 
+**Step 1b — Search for official GitHub repository.**
+
+Scan the full text of `analyses/{name}/raw.md` for any line containing `github.com`.
+
+Extract all GitHub URLs (pattern: `https?://github\.com/[a-zA-Z0-9_.-]+/[a-zA-Z0-9_.-]+`).
+
+Prefer URLs that appear near phrases like "code available", "implementation", "official", "our code", "released at", or similar.
+
+If multiple URLs found, pick the one most likely to be the official paper repository (not a cited baseline's repo).
+
+Record as `{GITHUB_URL}` (or "not found" if none).
+
 **Step 2 — Deep analysis.**
 
 Carefully read the entire raw.md. Then produce `analyses/{name}/innovations.md` with the following structure (do not skip any section — write "N/A" only if truly absent):
@@ -25,9 +37,18 @@ Carefully read the entire raw.md. Then produce `analyses/{name}/innovations.md` 
 paper: {title}
 name: {name}
 analyzed: {today's date}
+github: {GITHUB_URL}
 ---
 
 # Innovation Analysis: {title}
+
+## 0. Repository
+
+- **GitHub**: {GITHUB_URL}
+- **Status**: official | not-found
+- **Notes**: {any relevant info about the repo: main branch, language, additional deps mentioned}
+
+---
 
 ## 1. Problem Statement
 
@@ -155,7 +176,8 @@ L_total = {equation}
 Print:
 ```
 ✓ Analyzed: {title}
-  Output  → analyses/{name}/innovations.md
+  Output      → analyses/{name}/innovations.md
+  GitHub      → {GITHUB_URL or "not found"}
   Contributions: {count}
   Components: {list key model components}
   Next: /reproduce-code {name}

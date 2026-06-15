@@ -11,6 +11,29 @@ First argument: paper name slug (e.g. `attention-is-all-you-need`). Must match a
 
 ## Steps
 
+**Step 0 — Check for official GitHub repository.**
+
+Read `analyses/{name}/innovations.md`. Look at the frontmatter `github:` field **and** the `## 0. Repository` section.
+
+If a GitHub URL is present (not "not found"):
+
+1. Run:
+   ```bash
+   python3 scripts/fetch_repo.py {GITHUB_URL} analyses/{name}/
+   ```
+
+2. Parse the JSON output.
+   - **If success**: read the official source files identified under `file_summaries.model` and `file_summaries.loss` (the first result in each, up to 80 preview lines). These are the ground-truth implementation.
+     - Record `{HAS_OFFICIAL_REPO}` = true
+     - Use the official `model.py` and `loss.py` as the **primary source** when generating those files below. Adapt them to use our config dataclass and add type hints, but do NOT rewrite the mathematical logic.
+     - For `train.py` and `test.py`: still follow the BaseTrainer/BaseEvaluator pattern — wrap the official model/loss.
+     - Note any extra dependencies from `requirements` in the generated `README.md`.
+   - **If clone failed** (private repo, network error, etc.): record `{HAS_OFFICIAL_REPO}` = false. Print a warning and continue with generating from scratch.
+
+If no GitHub URL: set `{HAS_OFFICIAL_REPO}` = false.
+
+---
+
 **Step 1 — Load all reference material.**
 
 Read in this order:
@@ -31,7 +54,9 @@ Run: `mkdir -p reproductions/{name}`
 Generate all 7 files below. Rules:
 - No placeholder TODOs — implement every component described in the analysis.
 - Use type hints throughout.
-- `config.py`, `model.py`, `loss.py`, `dataset.py` are fully paper-specific — write them from scratch based on the paper.
+- `config.py`, `model.py`, `loss.py`, `dataset.py` are fully paper-specific.
+  - If `{HAS_OFFICIAL_REPO}` = true: adapt `model.py` and `loss.py` from the official code (keep mathematical logic, port to our config dataclass). Generate `dataset.py` from the paper.
+  - If `{HAS_OFFICIAL_REPO}` = false: write all four from scratch based on `innovations.md`.
 - `train.py` and `test.py` must follow the template pattern exactly (subclass BaseTrainer / use BaseEvaluator) — do NOT rewrite the training loop; that logic lives in `src/base/`.
 - First line of `train.py` and `test.py`: `sys.path.insert(0, os.path.normpath(os.path.join(os.path.dirname(__file__), "..", "..")))`
 
@@ -203,6 +228,8 @@ Standalone test / evaluation script. Must include:
 
 Paper: {arxiv URL or citation}
 Analysis: analyses/{name}/innovations.md
+Official code: {GITHUB_URL or "N/A — generated from paper"}
+  (cloned to analyses/{name}/_official_repo/ — model.py and loss.py adapted from official implementation)
 
 ## Quick Start
 pip install torch torchvision  # + any paper-specific deps

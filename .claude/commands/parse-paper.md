@@ -76,13 +76,33 @@ parsed: {today's date}
 
 If a section is absent in the paper, write `{not present}`.
 
-**Step 4 — Confirm.**
+**Step 4 — Extract figures.**
+
+Run `python3 scripts/extract_figures.py papers/{name}.pdf analyses/{name}/`.
+
+The script outputs JSON with:
+- `total` — number of figures found
+- `figures` — list of `{index, file, page, width, height, caption}`
+- `arch_figure` — the figure most likely to be the architecture diagram, with `b64` (base64 PNG)
+
+Add to the frontmatter of `analyses/{name}/raw.md` (update the file):
+```yaml
+figures_dir: analyses/{name}/figures/
+arch_figure: analyses/{name}/figures/{arch_figure_filename}
+arch_caption: {arch_figure_caption}
+figure_count: {total}
+```
+
+If PyMuPDF is not installed, skip this step and note it in the confirm output.
+
+**Step 5 — Confirm.**
 
 Print a summary:
 ```
 ✓ Parsed: {title}
-  PDF     → papers/{name}.pdf
-  Raw     → analyses/{name}/raw.md
+  PDF      → papers/{name}.pdf
+  Raw      → analyses/{name}/raw.md
+  Figures  → analyses/{name}/figures/ ({N} extracted, arch: fig_XXX.png)
   Sections found: {list section headings}
   Next: /analyze-innovations {name}
 ```
