@@ -52,6 +52,33 @@ auto-research/
 │   └── {paper_name}/          # one folder per paper
 │       ├── summary.html       # full innovation analysis report
 │       └── model.py           # standalone PyTorch model (no local imports)
+├── datasets/                  # 数据集目录（每个数据集一个子目录）
+│   └── {dataset_name}/
+│       ├── raw/               # 原始下载文件
+│       ├── processed/         # dataset.py 直接读取的预处理文件
+│       └── splits/            # train.txt / val.txt / test.txt
+├── src/                       # 基础代码（所有 reproduction 可共享）
+│   ├── base/
+│   │   ├── base_model.py      # BaseModel(nn.Module) — save/load/freeze
+│   │   ├── base_trainer.py    # BaseTrainer — 训练循环骨架
+│   │   └── base_evaluator.py  # BaseEvaluator — 测试时推理
+│   ├── metrics/
+│   │   ├── classification.py  # AUC, Accuracy, F1, Precision, Recall, AP
+│   │   └── regression.py      # MSE, RMSE, MAE, R², MAPE
+│   └── utils/
+│       ├── logger.py          # MetricLogger → metrics.jsonl + train.log + CSV
+│       ├── checkpoint.py      # CheckpointManager → ckpt_best.pt / ckpt_latest.pt
+│       └── seed.py            # set_seed(seed, deterministic=False)
+├── logs/                      # 训练日志（每次运行一个子目录）
+│   └── {paper_name}/
+│       └── {run_name}/        # e.g. run_20260615_143022
+│           ├── config.json    # 运行配置快照
+│           ├── metrics.jsonl  # 逐步指标（每行一条 JSON）
+│           ├── train.log      # 人类可读的文本日志
+│           ├── metrics.csv    # 训练结束后导出
+│           ├── ckpt_best.pt   # 最优验证指标对应的 checkpoint
+│           ├── ckpt_latest.pt # 最近一次 epoch 的 checkpoint
+│           └── test_results.json  # test.py 运行后填写
 ├── scripts/
 │   ├── fetch_paper.py         # arxiv fetch or local PDF copy
 │   ├── parse_pdf.py           # PDF → structured text
