@@ -279,7 +279,7 @@ auto-research/
 - 提取 PDF 中所有嵌入式光栅图片（PNG/JPEG xref）
 - 对只有矢量绘图的页面（ML 论文常见）进行整页光栅化渲染
 - 按 Caption 关键词（architecture / framework / overview / pipeline…）、图编号、宽高比自动评分
-- 得分最高者认定为架构图，base64 编码写入 `raw.md` frontmatter，用于 `summary.html` 内嵌显示
+- 得分最高者认定为架构图。其 base64 写入 sidecar 文件 `figures/arch_b64.txt`，**不写入 `raw.md`**（base64 blob 高达 150K+ tokens，会污染所有下游 skill 的上下文）；`raw.md` frontmatter 只记录图片路径与 caption。`summary.html` 生成时由脚本直接从 PNG 读取并内嵌
 
 ---
 
@@ -377,6 +377,8 @@ python3 scripts/fetch_repo.py https://github.com/author/repo analyses/{name}/
 | `train.py` | `PaperTrainer(BaseTrainer)` 子类，只覆写 `train_step` / `eval_step` |
 | `test.py` | `BaseEvaluator` 推理，自动选最新 checkpoint，保存 `test_results.json` |
 | `README.md` | 快速启动、文件说明、预期指标、已知差距 |
+
+**生成后校验（Step 4.5，不可跳过）：** 代码生成后立即 `python3 -m py_compile *.py` 检查语法，再用一个极小 config + dummy tensor 跑一次 model forward + loss（断言无 NaN）。语法/shape bug 在生成阶段就被抓住，而非拖到 `/fix-reproduction`。仅依赖真实磁盘数据的 dataset/IO 代码豁免此校验。
 
 `train.py` 的使用方式：
 
