@@ -29,7 +29,7 @@ If a run name was provided, use `logs/{name}/{run_name}/`. Otherwise use the mos
 Check that `{LOG_DIR}/train.log` exists. If the directory or log file is missing, run the code
 first to generate an error:
 ```bash
-cd reproductions/{name} && timeout 60 python train.py --run-name debug_fix_0 2>&1 | tail -50
+cd outputs/{name}/reproduction && timeout 60 python train.py --run-name debug_fix_0 2>&1 | tail -50
 ```
 Then set `{LOG_DIR}` to `logs/{name}/debug_fix_0/`.
 
@@ -44,7 +44,7 @@ python3 scripts/parse_errors.py {LOG_DIR}/train.log
 
 Parse the JSON output. If `found` is `false`, report:
 > "No error found in `{LOG_DIR}/train.log`. The last run may have completed without errors.
->  To verify, run: `cd reproductions/{name} && python test.py`"
+>  To verify, run: `cd outputs/{name}/reproduction && python test.py`"
 Then stop.
 
 From the parsed output, record:
@@ -128,7 +128,7 @@ After fixing, briefly note what you changed and why in one sentence.
 
 Run the code for a short time to check that the error is gone:
 ```bash
-cd reproductions/{name} && timeout 90 python train.py --run-name debug_fix_{attempt} 2>&1 | head -120
+cd outputs/{name}/reproduction && timeout 90 python train.py --run-name debug_fix_{attempt} 2>&1 | head -120
 ```
 
 Parse the output:
@@ -173,7 +173,7 @@ If stop: go to Step 7 with status "failed".
   Verified: training ran {K} steps without error in debug_fix_{attempt}/
 
   Next steps:
-    cd reproductions/{name}
+    cd outputs/{name}/reproduction
     python train.py --run-name exp_01
 ```
 

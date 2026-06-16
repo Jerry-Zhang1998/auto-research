@@ -57,7 +57,7 @@ The `arch_figure` field in `analyses/{name}/raw.md` frontmatter (or from `extrac
 
 **If `b64` is null** — omit the `figure-block` entirely; fall back to ASCII diagram only.
 
-The `.figure-block` CSS is already in the template (`outputs/_template/summary.html`). Use it as-is — do not inline different styles.
+The `.figure-block` CSS is already in the template (`outputs/_template/html/summary.html`). Use it as-is — do not inline different styles.
 
 ### Architecture Diagram (ASCII supplement)
 - After the figure (or in its absence), convert the text diagram from innovations.md Section 3.3 into ASCII art inside a `<div class="equation">` block

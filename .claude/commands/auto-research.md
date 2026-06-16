@@ -71,12 +71,12 @@ Execute the full logic of the `/reproduce-code` skill inline. Framework is alway
 
 - Check innovations.md Section 0 for GitHub URL; if present, run `python3 scripts/fetch_repo.py {url} analyses/{name}/` and use official model/loss as the base
 - Read `analyses/{name}/innovations.md` and `prompts/reproduce_system.md`
-- Create `reproductions/{name}/` directory
+- Create `outputs/{name}/reproduction/` directory
 - Generate all 7 files: config.py, model.py, loss.py, dataset.py, train.py, test.py, README.md
 
 Print on completion:
 ```
-✓ [3/4] Code generated → reproductions/{name}/
+✓ [3/4] Code generated → outputs/{name}/reproduction/
 
 [4/4] Generating HTML report...
 ```
@@ -88,9 +88,9 @@ Print on completion:
 Execute the full logic of the `/generate-report` skill inline:
 
 - Read `analyses/{name}/innovations.md` and `prompts/html_report_system.md`
-- Run `mkdir -p outputs/{name}`
-- Write `outputs/{name}/summary.html` — complete self-contained dark-theme HTML
-- Copy `reproductions/{name}/model.py` → `outputs/{name}/model.py`
+- Run `mkdir -p outputs/{name}/html outputs/{name}/reproduction`
+- Write `outputs/{name}/html/summary.html` — complete self-contained dark-theme HTML
+- The full reproduction code (config.py, model.py, loss.py, dataset.py, train.py, test.py, README.md) is already in `outputs/{name}/reproduction/` from Stage 3
 
 Print on completion:
 ```
@@ -116,16 +116,19 @@ OUTPUTS
   papers/{name}.pdf
   analyses/{name}/raw.md
   analyses/{name}/innovations.md
-  reproductions/{name}/
-    ├── config.py
-    ├── model.py
-    ├── loss.py
-    ├── dataset.py
-    ├── train.py
-    └── README.md
   outputs/{name}/
-    ├── summary.html     ← open in browser
-    └── model.py         ← standalone PyTorch model
+    ├── html/
+    │   ├── summary.html     ← open in browser
+    │   ├── train.html       ← training curves [if logs exist]
+    │   └── evaluate.html    ← ROC/PR/confusion [if test_results.json exists]
+    └── reproduction/
+        ├── config.py
+        ├── model.py
+        ├── loss.py
+        ├── dataset.py
+        ├── train.py
+        ├── test.py
+        └── README.md
 
 KEY INNOVATIONS
 {3-5 bullet points summarizing the paper's contributions}
@@ -134,10 +137,10 @@ ARCHITECTURE
 {1-2 sentence description of model structure}
 
 TO BROWSE THE REPORT
-  open outputs/{name}/summary.html
+  open outputs/{name}/html/summary.html
 
 TO RUN THE REPRODUCTION
-  cd reproductions/{name}
+  cd outputs/{name}/reproduction
   pip install torch  # + any extra deps in README.md
   python train.py
 

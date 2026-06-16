@@ -5,6 +5,7 @@ Usage: python3 scripts/fetch_paper.py <arxiv_url_or_id_or_pdf_path> [name]
 Output: prints JSON with {name, pdf_path, title, authors, year, abstract}
 """
 import sys, os, re, json, shutil, urllib.request
+from typing import Optional
 
 PAPERS_DIR = "papers"
 os.makedirs(PAPERS_DIR, exist_ok=True)
@@ -17,7 +18,7 @@ def slugify(text: str) -> str:
     return text[:60]
 
 
-def parse_arxiv_id(source: str) -> str | None:
+def parse_arxiv_id(source: str) -> Optional[str]:
     patterns = [
         r"arxiv\.org/abs/(\d{4}\.\d{4,5}(?:v\d+)?)",
         r"arxiv\.org/pdf/(\d{4}\.\d{4,5}(?:v\d+)?)",
@@ -30,7 +31,7 @@ def parse_arxiv_id(source: str) -> str | None:
     return None
 
 
-def fetch_arxiv(arxiv_id: str, name: str | None) -> dict:
+def fetch_arxiv(arxiv_id: str, name: Optional[str]) -> dict:
     # Fetch metadata via arxiv API
     api_url = f"https://export.arxiv.org/api/query?id_list={arxiv_id}"
     try:
@@ -77,7 +78,7 @@ def fetch_arxiv(arxiv_id: str, name: str | None) -> dict:
     }
 
 
-def fetch_local(pdf_path: str, name: str | None) -> dict:
+def fetch_local(pdf_path: str, name: Optional[str]) -> dict:
     if not os.path.exists(pdf_path):
         return {"error": f"File not found: {pdf_path}"}
 

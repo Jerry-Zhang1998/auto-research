@@ -30,7 +30,7 @@ analyses/attention-is-all-you-need/
 └── _official_repo/               # 官方 GitHub 仓库（如论文中提供链接则自动克隆）
     └── ...                       # 原始代码，model.py/loss.py 作为复现主要来源
 
-reproductions/attention-is-all-you-need/
+outputs/attention-is-all-you-need/reproduction/
 ├── config.py                     # 所有超参数（值直接来自论文）
 ├── model.py                      # 完整模型架构（PyTorch）
 ├── loss.py                       # Loss 函数（返回 dict，便于消融）
@@ -49,10 +49,18 @@ logs/attention-is-all-you-need/run_20260615_143022/
 └── test_results.json             # test.py 运行后填写
 
 outputs/attention-is-all-you-need/
-├── summary.html                  # 完整创新点报告（含架构图，浏览器直接打开）
-├── model.py                      # 零外部依赖的独立模型文件
-├── train.html                    # 训练曲线可视化（loss / AUC / LR）
-└── evaluate.html                 # 评估报告（ROC、PR 曲线、混淆矩阵）
+├── html/
+│   ├── summary.html              # 完整创新点报告（含架构图，浏览器直接打开）
+│   ├── train.html                # 训练曲线可视化（loss / AUC / LR）
+│   └── evaluate.html             # 评估报告（ROC、PR 曲线、混淆矩阵）
+└── reproduction/
+    ├── config.py                 # 所有超参数（值直接来自论文）
+    ├── model.py                  # 完整模型架构（PyTorch）
+    ├── loss.py                   # Loss 函数
+    ├── dataset.py                # 数据加载
+    ├── train.py                  # PaperTrainer(BaseTrainer) + CLI 入口
+    ├── test.py                   # BaseEvaluator 推理 + 指标输出
+    └── README.md
 ```
 
 ---
@@ -92,7 +100,7 @@ pip install torch torchvision
 完成后打开报告：
 
 ```bash
-open outputs/attention-is-all-you-need/summary.html
+open outputs/attention-is-all-you-need/html/summary.html
 ```
 
 ### 分步执行
@@ -114,7 +122,7 @@ open outputs/attention-is-all-you-need/summary.html
 ### 运行复现代码
 
 ```bash
-cd reproductions/attention-is-all-you-need
+cd outputs/attention-is-all-you-need/reproduction
 
 # 训练
 python train.py                            # 默认配置
@@ -124,9 +132,9 @@ python train.py --lr 1e-3 --epochs 50 --run-name exp_01
 python test.py --run-name exp_01
 
 # 生成训练曲线 + 评估可视化
-python3 ../../scripts/generate_viz.py \
-    --log-dir ../../logs/attention-is-all-you-need/exp_01 \
-    --output-dir ../../outputs/attention-is-all-you-need
+python3 ../../../scripts/generate_viz.py \
+    --log-dir ../../../logs/attention-is-all-you-need/exp_01 \
+    --output-dir ../../../outputs/attention-is-all-you-need/html
 ```
 
 ### 训练出错时自动修复
@@ -147,8 +155,8 @@ python3 ../../scripts/generate_viz.py \
 |-------|------|------|
 | `/parse-paper` | PDF 路径 或 arXiv URL | `analyses/{name}/raw.md` + `figures/` |
 | `/analyze-innovations` | 论文名 | `analyses/{name}/innovations.md`（含 GitHub URL） |
-| `/reproduce-code` | 论文名 | `reproductions/{name}/`（优先用官方代码） |
-| `/generate-report` | 论文名 | `outputs/{name}/summary.html` + `model.py` + 可视化 HTML |
+| `/reproduce-code` | 论文名 | `outputs/{name}/reproduction/`（优先用官方代码） |
+| `/generate-report` | 论文名 | `outputs/{name}/html/{summary,train,evaluate}.html` + `outputs/{name}/reproduction/model.py` |
 | `/auto-research` | PDF 路径 或 arXiv URL | 以上四个阶段全部执行 |
 | `/fix-reproduction` | 论文名 \[run\] \[次数\] | 自动打补丁直到代码可运行 |
 
@@ -197,34 +205,32 @@ auto-research/
 │       ├── figures/                   # 提取的图片 + manifest.json
 │       └── _official_repo/            # 官方 GitHub 代码（/reproduce-code 克隆）
 │
-├── reproductions/
-│   ├── _template/                     # 代码参考模板（Skills 生成时对齐此模板）
-│   │   ├── config.py
-│   │   ├── model.py
-│   │   ├── loss.py
-│   │   ├── dataset.py
-│   │   ├── train.py                   # 薄 BaseTrainer 子类示例（~60 行）
-│   │   └── test.py                    # BaseEvaluator 用法示例（~50 行）
-│   └── {paper_name}/
-│       ├── config.py
-│       ├── model.py
-│       ├── loss.py
-│       ├── dataset.py
-│       ├── train.py
-│       ├── test.py
-│       └── README.md
-│
 ├── outputs/
-│   ├── _template/                     # HTML 设计模板（Skills 生成时对齐）
-│   │   ├── summary.html
-│   │   ├── train.html
-│   │   ├── evaluate.html
-│   │   └── model.py
+│   ├── _template/
+│   │   ├── html/                      # HTML 报告模板（Skills 生成时对齐）
+│   │   │   ├── summary.html
+│   │   │   ├── train.html
+│   │   │   └── evaluate.html
+│   │   └── reproduction/              # 代码模板（Skills 生成时对齐）
+│   │       ├── config.py
+│   │       ├── model.py
+│   │       ├── loss.py
+│   │       ├── dataset.py
+│   │       ├── train.py               # 薄 BaseTrainer 子类示例
+│   │       └── test.py                # BaseEvaluator 用法示例
 │   └── {paper_name}/
-│       ├── summary.html               # 创新点报告（含架构图 base64 内嵌）
-│       ├── model.py                   # 零本地依赖的独立模型
-│       ├── train.html                 # 训练曲线（loss / 指标 / LR）
-│       └── evaluate.html             # ROC、PR 曲线、混淆矩阵
+│       ├── html/                      # 所有 HTML 报告
+│       │   ├── summary.html           # 创新点报告（含架构图 base64 内嵌）
+│       │   ├── train.html             # 训练曲线（loss / 指标 / LR）
+│       │   └── evaluate.html          # ROC、PR 曲线、混淆矩阵
+│       └── reproduction/              # 完整可运行复现代码
+│           ├── config.py              # 所有超参数（来自论文）
+│           ├── model.py               # 模型架构
+│           ├── loss.py                # Loss 函数
+│           ├── dataset.py             # 数据加载
+│           ├── train.py               # PaperTrainer(BaseTrainer)
+│           ├── test.py                # BaseEvaluator 推理
+│           └── README.md
 │
 ├── datasets/
 │   └── {dataset_name}/
@@ -392,9 +398,9 @@ python test.py --split val             # 在验证集上评估
 
 ### Stage 4 — HTML 报告 (`/generate-report`)
 
-输出 4 个文件到 `outputs/{name}/`：
+输出到 `outputs/{name}/html/` 和 `outputs/{name}/reproduction/`：
 
-**`summary.html`** — 自包含深色主题报告页，无需联网即可浏览
+**`html/summary.html`** — 自包含深色主题报告页，无需联网即可浏览
 - Paper Profile 栏：论文类型、领域，以及各节存在/缺失的彩色标签（仅存在的节可点击跳转）
 - TL;DR 摘要、动态目录（只列存在的节）
 - 架构图（从 PDF 提取的 base64 PNG 直接内嵌）
@@ -402,14 +408,14 @@ python test.py --split val             # 在验证集上评估
 - **Efficiency Analysis 节**（条件渲染）：四格指标卡（复杂度、参数量、吞吐量、显存）
 - 贡献卡片、架构组件块（tensor shape 标签）、Loss 公式块、训练参数表、指标对比表、复现 Checklist
 
-**`model.py`** — 从 `reproductions/{name}/model.py` 复制，移除所有本地 import，可独立运行
+**`reproduction/`** — 完整可运行复现代码（由 Stage 3 生成），包含 config.py、model.py、loss.py、dataset.py、train.py、test.py、README.md
 
-**`train.html`** — 训练过程可视化（由 `generate_viz.py` 从 `metrics.jsonl` 生成）
+**`html/train.html`** — 训练过程可视化（由 `generate_viz.py` 从 `metrics.jsonl` 生成）
 - Loss 曲线（train / val）
 - 验证指标曲线（AUC / Accuracy / F1）
 - 学习率 schedule 曲线
 
-**`evaluate.html`** — 测试集评估报告（由 `generate_viz.py` 从 `test_results.json` 生成）
+**`html/evaluate.html`** — 测试集评估报告（由 `generate_viz.py` 从 `test_results.json` 生成）
 - 指标卡片（AUC / Accuracy / F1 / Precision / Recall）
 - ROC 曲线、PR 曲线
 - 混淆矩阵热图
@@ -449,9 +455,9 @@ python test.py --split val             # 在验证集上评估
 所有复现工程通过 `sys.path.insert` 共享这些组件：
 
 ```python
-# reproductions/any-paper/train.py 首行
+# outputs/{paper_name}/reproduction/train.py 首行
 import sys, os
-sys.path.insert(0, os.path.normpath(os.path.join(os.path.dirname(__file__), "..", "..")))
+sys.path.insert(0, os.path.normpath(os.path.join(os.path.dirname(__file__), "..", "..", "..")))
 
 from src.base.base_trainer import BaseTrainer
 from src.utils.logger import MetricLogger
@@ -526,7 +532,7 @@ datasets/{dataset_name}/
 └── splits/       train.txt / val.txt / test.txt（每行一个样本路径或 ID）
 ```
 
-`reproductions/{name}/dataset.py` 中的 `data_dir` 默认指向 `datasets/{dataset_name}/processed/`。
+`outputs/{name}/reproduction/dataset.py` 中的 `data_dir` 默认指向 `datasets/{dataset_name}/processed/`。
 
 ---
 
@@ -545,14 +551,15 @@ datasets/{dataset_name}/
 ```
 papers/pdf  →  analyses/raw.md  →  analyses/innovations.md
                     ↓ (figures/)        ↓ (github URL)
-               outputs/summary.html   analyses/_official_repo/
-                                            ↓
-                                    reproductions/{name}/
+          outputs/{name}/html/      analyses/_official_repo/
+             summary.html                   ↓
+                                    outputs/{name}/reproduction/
                                             ↓
                                        logs/{name}/{run}/
                                             ↓
-                                    outputs/train.html
-                                    outputs/evaluate.html
+                               outputs/{name}/html/train.html
+                               outputs/{name}/html/evaluate.html
+                               outputs/{name}/reproduction/model.py
 ```
 
 `innovations.md` 是整个流水线的核心契约：Stage 3、Stage 4、`/fix-reproduction` 均以它为主要参考来源。

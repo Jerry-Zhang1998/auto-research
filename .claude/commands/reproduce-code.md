@@ -40,14 +40,14 @@ Read in this order:
 1. `analyses/{name}/innovations.md` — source of truth for the paper. If missing, tell the user to run `/analyze-innovations {name}` first.
 2. `analyses/{name}/raw.md` — for implementation-level details missed in the analysis.
 3. `prompts/reproduce_system.md` — code generation standards to follow exactly.
-4. `reproductions/_template/train.py` — **reference template**: shows the exact BaseTrainer subclass pattern to follow for `train.py`.
-5. `reproductions/_template/test.py` — **reference template**: shows the exact BaseEvaluator pattern to follow for `test.py`.
+4. `outputs/_template/reproduction/train.py` — **reference template**: shows the exact BaseTrainer subclass pattern to follow for `train.py`.
+5. `outputs/_template/reproduction/test.py` — **reference template**: shows the exact BaseEvaluator pattern to follow for `test.py`.
 6. `src/base/base_trainer.py` — understand the interface: which methods are abstract, what keys `train_step` must return.
 7. `src/base/base_evaluator.py` — understand `load_checkpoint` and `evaluate` signatures.
 
 **Step 2 — Create the reproduction directory.**
 
-Run: `mkdir -p reproductions/{name}`
+Run: `mkdir -p outputs/{name}/reproduction`
 
 **Step 3 — Generate each file.**
 
@@ -58,11 +58,11 @@ Generate all 7 files below. Rules:
   - If `{HAS_OFFICIAL_REPO}` = true: adapt `model.py` and `loss.py` from the official code (keep mathematical logic, port to our config dataclass). Generate `dataset.py` from the paper.
   - If `{HAS_OFFICIAL_REPO}` = false: write all four from scratch based on `innovations.md`.
 - `train.py` and `test.py` must follow the template pattern exactly (subclass BaseTrainer / use BaseEvaluator) — do NOT rewrite the training loop; that logic lives in `src/base/`.
-- First line of `train.py` and `test.py`: `sys.path.insert(0, os.path.normpath(os.path.join(os.path.dirname(__file__), "..", "..")))`
+- First line of `train.py` and `test.py`: `sys.path.insert(0, os.path.normpath(os.path.join(os.path.dirname(__file__), "..", "..", "..")))`
 
 ---
 
-### File: `reproductions/{name}/config.py`
+### File: `outputs/{name}/reproduction/config.py`
 
 All hyperparameters in a single dataclass. Every value must be taken from the paper; add a comment for values not explicitly stated.
 
@@ -91,7 +91,7 @@ class Config:
 
 ---
 
-### File: `reproductions/{name}/model.py`
+### File: `outputs/{name}/reproduction/model.py`
 
 Full model architecture. Implement every component identified in the innovations analysis. Include:
 - All sub-modules as separate `nn.Module` classes
@@ -111,7 +111,7 @@ from config import ModelConfig
 
 ---
 
-### File: `reproductions/{name}/loss.py`
+### File: `outputs/{name}/reproduction/loss.py`
 
 All loss functions from Section 4 of the innovations analysis.
 
@@ -133,7 +133,7 @@ class {PaperName}Loss(nn.Module):
 
 ---
 
-### File: `reproductions/{name}/dataset.py`
+### File: `outputs/{name}/reproduction/dataset.py`
 
 Data loading and preprocessing pipeline matching the paper's experimental setup.
 
@@ -153,12 +153,12 @@ def get_dataloader(config: TrainConfig, split: str = "train") -> DataLoader:
 
 ---
 
-### File: `reproductions/{name}/train.py`
+### File: `outputs/{name}/reproduction/train.py`
 
 Thin `PaperTrainer(BaseTrainer)` subclass — only override `train_step` and `eval_step`.
 All loop logic (logging, checkpointing, LR stepping, gradient clipping, metric computation)
 is handled by `BaseTrainer` in `src/base/base_trainer.py`. Follow the pattern in
-`reproductions/_template/train.py` exactly.
+`outputs/_template/reproduction/train.py` exactly.
 
 Must include:
 - `sys.path.insert(0, ...)` pointing to project root so `src/` is importable
@@ -177,9 +177,9 @@ The `run_name` defaults to `run_YYYYMMDD_HHMMSS` so each run has its own log dir
 
 ---
 
-### File: `reproductions/{name}/test.py`
+### File: `outputs/{name}/reproduction/test.py`
 
-Uses `BaseEvaluator` from `src/base/base_evaluator.py`. Follow `reproductions/_template/test.py` exactly.
+Uses `BaseEvaluator` from `src/base/base_evaluator.py`. Follow `outputs/_template/reproduction/test.py` exactly.
 Must include:
 - `sys.path.insert(0, ...)` pointing to project root
 - CLI args: `--run-name`, `--checkpoint` (direct path override), `--split` (test/val), `--task` (classification/regression)
@@ -190,7 +190,7 @@ Must include:
 
 ---
 
-### File: `reproductions/{name}/README.md`
+### File: `outputs/{name}/reproduction/README.md`
 
 ```markdown
 # {Paper Title} — Reproduction
@@ -241,8 +241,8 @@ Metrics are written to logs/{name}/{run_name}/:
 
 Run:
 ```bash
-find reproductions/{name} -type f | sort
-wc -l reproductions/{name}/*.py
+find outputs/{name}/reproduction -type f | sort
+wc -l outputs/{name}/reproduction/*.py
 ```
 
 **Step 5 — Confirm.**
@@ -250,7 +250,7 @@ wc -l reproductions/{name}/*.py
 Print:
 ```
 ✓ Code generated: {title}
-  Directory → reproductions/{name}/
+  Directory → outputs/{name}/reproduction/
   Files:
     config.py    ({N} lines)  — {N} hyperparameters
     model.py     ({N} lines)  — {list components}
@@ -261,7 +261,7 @@ Print:
     README.md
 
   To train:
-    cd reproductions/{name}
+    cd outputs/{name}/reproduction
     python train.py --run-name exp_01
 
   To test:

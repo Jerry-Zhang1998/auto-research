@@ -22,6 +22,7 @@ Prints JSON to stdout:
     {total, manifest_path, figures: [...], arch_figure: {..., b64: "..."}}
 """
 import sys, os, json, re, base64
+from typing import Optional
 
 # ── Tuning constants ──────────────────────────────────────────────────────────
 MIN_W, MIN_H       = 150, 120   # ignore tiny images (logos, icons)
@@ -71,7 +72,7 @@ def extract_raster_images(doc, page_num: int, figures_dir: str, counter: list) -
     return results
 
 
-def render_page_as_image(doc, page_num: int, figures_dir: str, counter: list) -> dict | None:
+def render_page_as_image(doc, page_num: int, figures_dir: str, counter: list) -> Optional[dict]:
     """Render a whole PDF page to PNG (for vector-graphic architecture diagrams)."""
     import fitz
     page = doc[page_num]
@@ -103,7 +104,7 @@ def render_page_as_image(doc, page_num: int, figures_dir: str, counter: list) ->
     }
 
 
-def match_captions(doc, figures: list[dict]) -> None:
+def match_captions(doc, figures: list) -> None:
     """Assign paper figure captions to extracted images by page co-occurrence."""
     # Collect all captions and their page locations
     cap_re = re.compile(
@@ -182,7 +183,7 @@ def score_figure(fig: dict) -> float:
     return score
 
 
-def find_architecture_figure(figures: list[dict]) -> dict | None:
+def find_architecture_figure(figures: list) -> Optional[dict]:
     if not figures:
         return None
     scored = sorted(figures, key=score_figure, reverse=True)
@@ -206,7 +207,7 @@ def extract_all_figures(pdf_path: str, output_dir: str) -> list[dict]:
 
     doc     = fitz.open(pdf_path)
     counter = [0]
-    figures: list[dict] = []
+    figures: list = []
 
     # Collect pages that have figure captions (for vector render fallback)
     cap_pages: set[int] = set()

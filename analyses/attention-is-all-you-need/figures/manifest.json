@@ -1,0 +1,62 @@
+[
+  {
+    "index": 1,
+    "file": "analyses/attention-is-all-you-need/figures/fig_001.png",
+    "page": 3,
+    "width": 1520,
+    "height": 2239,
+    "rendered": false,
+    "caption": "Figure 1: The Transformer - model architecture",
+    "fig_num": 1
+  },
+  {
+    "index": 2,
+    "file": "analyses/attention-is-all-you-need/figures/fig_002.png",
+    "page": 4,
+    "width": 445,
+    "height": 884,
+    "rendered": false,
+    "caption": "Figure 2: (left) Scaled Dot-Product Attention. (right) Multi-Head Attention consists of several",
+    "fig_num": 2
+  },
+  {
+    "index": 3,
+    "file": "analyses/attention-is-all-you-need/figures/fig_003.png",
+    "page": 4,
+    "width": 835,
+    "height": 1282,
+    "rendered": false,
+    "caption": "Figure 2: (left) Scaled Dot-Product Attention. (right) Multi-Head Attention consists of several",
+    "fig_num": 2
+  },
+  {
+    "index": 4,
+    "file": "analyses/attention-is-all-you-need/figures/fig_004_page13.png",
+    "page": 13,
+    "width": 1102,
+    "height": 1426,
+    "rendered": true,
+    "caption": "Figure 3: An example of the attention mechanism following long-distance dependencies in the",
+    "fig_num": 3
+  },
+  {
+    "index": 5,
+    "file": "analyses/attention-is-all-you-need/figures/fig_005_page14.png",
+    "page": 14,
+    "width": 1102,
+    "height": 1426,
+    "rendered": true,
+    "caption": "Figure 4: Two attention heads, also in layer 5 of 6, apparently involved in anaphora resolution. Top:",
+    "fig_num": 4
+  },
+  {
+    "index": 6,
+    "file": "analyses/attention-is-all-you-need/figures/fig_006_page15.png",
+    "page": 15,
+    "width": 1102,
+    "height": 1426,
+    "rendered": true,
+    "caption": "Figure 5: Many of the attention heads exhibit behaviour that seems related to the structure of the",
+    "fig_num": 5
+  }
+]

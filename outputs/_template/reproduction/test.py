@@ -17,7 +17,7 @@ import sys
 import argparse
 from typing import Optional, Tuple
 
-sys.path.insert(0, os.path.normpath(os.path.join(os.path.dirname(__file__), "..", "..")))
+sys.path.insert(0, os.path.normpath(os.path.join(os.path.dirname(__file__), "..", "..", "..")))
 
 from config import Config
 from model import ExampleModel
@@ -62,9 +62,9 @@ if __name__ == "__main__":
     config = Config()
     set_seed(config.seed)
 
-    paper     = os.path.basename(os.path.dirname(os.path.abspath(__file__)))
+    paper     = os.path.basename(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     logs_root = os.path.normpath(
-        os.path.join(os.path.dirname(__file__), "..", "..", "logs", paper)
+        os.path.join(os.path.dirname(__file__), "..", "..", "..", "logs", paper)
     )
 
     if args.checkpoint:
@@ -86,4 +86,4 @@ if __name__ == "__main__":
 
     evaluator.save_results(results, out_path)
     print(f"\nTo visualise:\n  python3 scripts/generate_viz.py "
-          f"--log-dir {os.path.dirname(ckpt_path)} --output-dir outputs/{paper}")
+          f"--log-dir {os.path.dirname(ckpt_path)} --output-dir outputs/{paper}/html")

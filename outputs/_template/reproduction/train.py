@@ -21,7 +21,7 @@ import torch
 from datetime import datetime
 
 # ── Project root on path so src/ is importable ──────────────────────────────
-sys.path.insert(0, os.path.normpath(os.path.join(os.path.dirname(__file__), "..", "..")))
+sys.path.insert(0, os.path.normpath(os.path.join(os.path.dirname(__file__), "..", "..", "..")))
 
 from config import Config
 from model import ExampleModel
@@ -86,10 +86,10 @@ if __name__ == "__main__":
 
     set_seed(config.seed)
 
-    paper   = os.path.basename(os.path.dirname(os.path.abspath(__file__)))
+    paper   = os.path.basename(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     run     = args.run_name or f"run_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
     log_dir = os.path.normpath(
-        os.path.join(os.path.dirname(__file__), "..", "..", "logs", paper, run)
+        os.path.join(os.path.dirname(__file__), "..", "..", "..", "logs", paper, run)
     )
 
     model     = ExampleModel(config.model)
