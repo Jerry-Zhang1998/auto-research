@@ -33,6 +33,7 @@ Execute the full logic of the `/parse-paper` skill inline:
 
 - Run `python3 scripts/fetch_paper.py "{arg1}" "{arg2}"` to fetch/copy the paper
 - Run `python3 scripts/parse_pdf.py "papers/{name}.pdf"` to extract text
+- Run `python3 scripts/extract_figures.py "papers/{name}.pdf" "analyses/{name}/"` to extract architecture figures (sets `arch_figure` in raw.md; skip gracefully if PyMuPDF not installed)
 - Write `analyses/{name}/raw.md` following the raw.md schema
 
 Print on completion:
@@ -48,9 +49,11 @@ Print on completion:
 
 Execute the full logic of the `/analyze-innovations` skill inline:
 
-- Read `analyses/{name}/raw.md` and `prompts/innovations_system.md`
+- Read `analyses/{name}/raw.md`, `prompts/innovations_system.md`, and `prompts/math_specialist_system.md`
 - Search raw.md for any `github.com` URL — record as the official repo URL (or "not found")
-- Produce the complete structured innovation analysis including Section 0 (Repository)
+- Run detection scan to determine which sections are present (`sections_detected` MANIFEST)
+- **Round 1 (Math Specialist)**: if theoretical content detected, extract T.1–T.4 as `{THEORY_DRAFT}` using `math_specialist_system.md` — notation fidelity pass, no architectural interpretation
+- **Round 2 (Systems Analyst)**: full analysis pass — architecture, loss, training, efficiency; write T.5 (Theory→Design Connection) by synthesizing THEORY_DRAFT with architecture findings
 - Write `analyses/{name}/innovations.md`
 
 Print on completion:

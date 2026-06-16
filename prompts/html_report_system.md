@@ -11,11 +11,30 @@ You are generating a self-contained HTML research summary report. Follow these r
 
 ## Content Rules
 
-### Completeness
-- Every section from `innovations.md` must appear in the HTML
-- Do not truncate or summarize — the HTML is the primary deliverable, not a teaser
+### Dynamic Section Rendering
+- Read the `sections_detected` dict from `innovations.md` YAML frontmatter
+- **Only render HTML sections whose key is `true`** — absent sections are completely omitted
+- Never render an empty section with placeholder text or "N/A" — omit the entire `<section>` block
+- The TOC `<ol>` must list only the sections that were actually rendered
+- The `<div class="profile-bar">` must show section chips: `chip-on` for present, `chip-off` for absent
+
+### Completeness (for present sections)
+- Every present section from `innovations.md` must appear in the HTML — no truncation
 - Tables in innovations.md must become HTML `<table>` elements
 - Loss equations must go in `<div class="equation">` blocks (monospace, amber border)
+
+### Theoretical Analysis Section (if `theoretical_analysis = true`)
+- Use `<div class="theory-claim">` for the core claim/theorem
+- Use `<div class="derivation">` (cyan left border, monospace, pre) for the derivation steps
+- Use `<ul class="assumption-list">` for assumptions (⟹ prefix)
+- The "Theory → Design Connection" card is the most important — don't omit or shorten it
+- If the theory is informal (no formal proof): label clearly with "Key Insight (informal):"
+
+### Efficiency Analysis Section (if `efficiency_analysis = true`)
+- Use `<div class="efficiency-grid">` with four `<div class="efficiency-card">` cards
+- Cards: Complexity, Parameters, Throughput, GPU Memory
+- If any metric is not reported in the paper: omit that specific card (not the whole section)
+- Use `var(--accent3)` (green) for the numeric values to signal positive/favorable numbers
 
 ### Accuracy
 - Copy numbers and equations exactly — do not paraphrase metrics or loss terms
@@ -65,4 +84,7 @@ Before writing the file, verify mentally:
 3. No image `src` pointing to external URLs — base64 `data:` URIs are allowed ✓
 4. All `{PLACEHOLDER}` text replaced with real content ✓
 5. File opens and renders in an offline browser ✓
-6. If `ARCH_B64` is null, no broken `<img>` tag exists in the architecture section ✓
+6. If `ARCH_B64` is null, no broken `<img>` tag in the architecture section ✓
+7. TOC only lists sections that exist in the body ✓
+8. No empty `<section>` blocks for absent sections ✓
+9. `sections_detected = false` sections have no HTML at all — not even an empty header ✓

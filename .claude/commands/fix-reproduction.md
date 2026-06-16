@@ -64,11 +64,12 @@ Read the relevant files to understand BOTH what the code is doing and what it sh
 1. **Read the failing file**: Read `{PRIMARY_FILE}` (the full file, or at minimum lines ±50 around `{PRIMARY_LINE}`)
 
 2. **Read the paper's design**: Determine which section of innovations.md is most relevant:
-   - If `PRIMARY_FILE` contains `model` → read `analyses/{name}/innovations.md` Section 3 (Architecture)
-   - If `PRIMARY_FILE` contains `loss` → read Section 4 (Loss Design)
-   - If `PRIMARY_FILE` contains `train` → read Section 5 (Training Strategy)
-   - If `PRIMARY_FILE` contains `dataset` → read Section 5 + Section 7.1
+   - If `PRIMARY_FILE` contains `model` → read the section titled "Model Architecture" in `analyses/{name}/innovations.md`
+   - If `PRIMARY_FILE` contains `loss` → read the section titled "Loss Design"
+   - If `PRIMARY_FILE` contains `train` → read the section titled "Training Strategy"
+   - If `PRIMARY_FILE` contains `dataset` → read "Training Strategy" + "Implementation Notes"
    - Otherwise → read full `analyses/{name}/innovations.md`
+   - **If the targeted section is absent** (paper may not have a custom loss, etc.) → read the full `analyses/{name}/innovations.md` instead
 
 3. **Read the full traceback context**: If the primary frame is in torch internals (no user frame),
    also read the user frame just before the torch frame to understand what triggered it.

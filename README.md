@@ -171,7 +171,8 @@ auto-research/
 │
 ├── prompts/
 │   ├── parse_system.md                # 章节提取规则
-│   ├── innovations_system.md          # 创新点分析精度要求
+│   ├── innovations_system.md          # 创新点分析精度要求（Round 2 系统分析师指导）
+│   ├── math_specialist_system.md      # Round 1 数学专项提取指导（符号保真 + 推导逻辑）
 │   ├── reproduce_system.md            # 代码生成规范（形状注释、命名等）
 │   └── html_report_system.md          # HTML 设计规则（配色、架构图嵌入）
 │
@@ -278,19 +279,65 @@ auto-research/
 
 ### Stage 2 — 创新点分析 (`/analyze-innovations`)
 
-读取 `raw.md`，扫描全文中所有 `github.com` URL，输出 `innovations.md`：
+读取 `raw.md`，扫描全文中所有 `github.com` URL，输出 `innovations.md`。
 
-| 节 | 内容 |
+分析分为两轮：**Round 1（数学专项）** 和 **Round 2（系统分析）**。
+
+**检测扫描（Step 1c）**：在两轮分析前，先快速扫描论文，判断以下各维度是否存在：
+
+| 维度 | 判断依据 |
+|------|---------|
+| `theoretical_analysis` | 包含 theorem/proof/lemma/convergence/bound/"we prove" 等 |
+| `model_architecture` | 提出具名组件、有架构图/伪代码、描述 tensor 维度 |
+| `loss_design` | 提出超出标准 CE/MSE 的自定义损失函数 |
+| `training_strategy` | 非标准训练过程、多阶段、训练 trick 是贡献的一部分 |
+| `efficiency_analysis` | 报告 FLOPs/参数量对比、"X× faster"、复杂度分析 |
+| `ablation_study` | 包含消融实验表、"ablation"/"effect of" 等 |
+| `implementation_notes` | 独立的实现细节章节、初始化策略、工程级细节 |
+
+检测结果写入 `innovations.md` YAML frontmatter 和 `## Paper Profile` 节，**仅输出存在的章节**。
+
+**输出 sections（仅存在的才写入）：**
+
+| 节 | 条件 |
 |----|------|
-| **0. Repository** | 官方 GitHub URL（或 "not found"）、状态、关键文件说明 |
-| 1. Problem Statement | 核心问题、先验工作局限、一句话总结 |
-| 2. Core Contributions | 每条贡献的定义、意义、创新性 |
-| 3. Model Architecture | 高层设计、关键组件（含 tensor shape）、文字架构图 |
-| 4. Loss Design | 完整 Loss 公式、各项解释、权重策略 |
-| 5. Training Strategy | 数据集、优化器、LR schedule、batch size、训练技巧 |
-| 6. Key Results | 对比 SOTA 的指标表、Ablation 洞察 |
-| 7. Implementation Notes | 容易遗漏的细节、超参敏感性、复现 Checklist |
-| 8. Paper Significance | 影响力、局限性、后续方向 |
+| **0. Repository** | 始终 |
+| **1. Problem Statement** | 始终 |
+| **Theoretical Analysis** | `theoretical_analysis = true` — 理论框架、核心推导步骤、定理/命题、假设条件、理论→设计连接 |
+| **2. Core Contributions** | 始终 |
+| **3. Model Architecture** | `model_architecture = true` |
+| **4. Loss Design** | `loss_design = true` |
+| **5. Training Strategy** | `training_strategy = true` |
+| **Efficiency Analysis** | `efficiency_analysis = true` — 复杂度、参数量、吞吐量、显存、可扩展性 |
+| **6. Key Results** | 始终 |
+| **7. Implementation Notes** | `implementation_notes = true` |
+| **8. Paper Significance** | 始终 |
+
+**两轮分析流程（`theoretical_analysis = true` 时）：**
+
+```
+Round 1 — Math Specialist（prompts/math_specialist_system.md）
+  目标：数学内容高保真提取
+  ├── 只读论文的数学密集段落（定理/推导/附录）
+  ├── 符号与论文完全一致，禁止改写或简化
+  ├── 提取 T.1–T.4，生成 {THEORY_DRAFT}
+  └── T.5 强制留空（placeholder）— 禁止在此 pass 填写
+
+Round 2 — Systems Analyst（prompts/innovations_system.md）
+  目标：架构、Loss、训练的系统级分析 + 跨 pass 综合
+  ├── 分析完 Section 3（架构）和 Section 4（Loss）之后
+  ├── T.1–T.4：从 THEORY_DRAFT 校验复制
+  └── T.5：在此写成 —— 具体设计决策 + 对应定理 + 逻辑连接
+```
+
+T.5 是两轮分析的核心产出：它要回答"这个设计选择背后的理论依据是什么，改掉它会破坏什么"。
+
+**Theoretical Analysis 节的核心子节：**
+- `T.1 Theoretical Framework` — 论文依赖的理论框架（变分推断、信息论、PAC 学习等）
+- `T.2 Core Claim / Main Result` — 主定理或核心命题（直接引用论文符号）
+- `T.3 Key Derivation Steps` — 2-4 个最关键推导步骤（命名每步数学技法）
+- `T.4 Assumptions & Conditions` — 理论成立的条件（标注 standard / restrictive / implicit）
+- `T.5 Theory → Design Connection` — 理论结果如何直接驱动模型设计或 Loss 选择（Round 2 综合产出）
 
 Section 0 的 GitHub URL 会传递到 Stage 3，驱动官方代码优先策略。
 
@@ -348,8 +395,11 @@ python test.py --split val             # 在验证集上评估
 输出 4 个文件到 `outputs/{name}/`：
 
 **`summary.html`** — 自包含深色主题报告页，无需联网即可浏览
-- TL;DR 摘要、可跳转目录
+- Paper Profile 栏：论文类型、领域，以及各节存在/缺失的彩色标签（仅存在的节可点击跳转）
+- TL;DR 摘要、动态目录（只列存在的节）
 - 架构图（从 PDF 提取的 base64 PNG 直接内嵌）
+- **Theoretical Analysis 节**（条件渲染）：理论框架卡片、推导步骤块（双色边框、等宽字体）、假设列表、Theory→Design 连接
+- **Efficiency Analysis 节**（条件渲染）：四格指标卡（复杂度、参数量、吞吐量、显存）
 - 贡献卡片、架构组件块（tensor shape 标签）、Loss 公式块、训练参数表、指标对比表、复现 Checklist
 
 **`model.py`** — 从 `reproductions/{name}/model.py` 复制，移除所有本地 import，可独立运行

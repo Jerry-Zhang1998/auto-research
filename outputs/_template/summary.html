@@ -35,9 +35,11 @@ section { margin-bottom:44px; }
   padding-bottom:12px; border-bottom:1px solid var(--border); }
 .section-icon { width:36px; height:36px; border-radius:8px; display:flex; align-items:center;
   justify-content:center; font-size:1.1rem; flex-shrink:0; }
-.icon-problem{background:#3d1a1a} .icon-contrib{background:#1a2d1a} .icon-arch{background:#1a1a3d}
-.icon-loss{background:#2d2d1a} .icon-train{background:#1a2a2d} .icon-results{background:#2d1a2d}
-.icon-impl{background:#2a1a10}
+.icon-problem{background:#3d1a1a} .icon-theory{background:#1d1a3d}
+.icon-contrib{background:#1a2d1a} .icon-arch{background:#1a1a3d}
+.icon-loss{background:#2d2d1a} .icon-train{background:#1a2a2d}
+.icon-efficiency{background:#1a2d2a} .icon-results{background:#2d1a2d}
+.icon-ablation{background:#2a2d1a} .icon-impl{background:#2a1a10}
 .section-header h2 { font-size:1.15rem; font-weight:700; }
 .card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
   padding:20px 22px; margin-bottom:14px; }
@@ -76,6 +78,34 @@ footer { margin-top:60px; padding-top:20px; border-top:1px solid var(--border);
   color:var(--text-muted); font-size:0.8rem; text-align:center; }
 ul, ol { padding-left:22px; } li { margin-bottom:4px; } strong { color:#fff; }
 .muted { color:var(--text-muted); } .highlight { color:var(--accent2); }
+/* ── Theory section ── */
+.theory-claim { background:var(--surface); border:1px solid var(--border); border-left:3px solid var(--accent);
+  border-radius:var(--radius); padding:16px 20px; margin-bottom:14px; }
+.theory-claim .claim-label { font-size:.8rem; text-transform:uppercase; letter-spacing:.08em;
+  color:var(--accent); font-weight:700; margin-bottom:8px; }
+.derivation { background:var(--surface2); border:1px solid var(--border); border-left:3px solid var(--accent2);
+  border-radius:var(--radius); padding:16px 20px; font-family:var(--font-mono); font-size:.875rem;
+  overflow-x:auto; margin:12px 0; white-space:pre; line-height:1.9; }
+.assumption-list { list-style:none; padding:0; }
+.assumption-list li { padding:6px 0; font-size:.9rem; }
+.assumption-list li::before { content:"⟹ "; color:var(--accent2); }
+/* ── Efficiency section ── */
+.efficiency-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px; }
+@media(max-width:600px){ .efficiency-grid{grid-template-columns:1fr;} }
+.efficiency-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:16px 18px; }
+.efficiency-card .e-label { font-size:.75rem; text-transform:uppercase; letter-spacing:.08em; color:var(--text-muted); margin-bottom:6px; }
+.efficiency-card .e-value { font-size:1.1rem; font-weight:700; color:var(--accent3); font-family:var(--font-mono); }
+.efficiency-card .e-context { font-size:.8rem; color:var(--text-muted); margin-top:4px; }
+/* ── Paper profile chip row ── */
+.profile-bar { display:flex; gap:20px; flex-wrap:wrap; margin-bottom:28px; padding:14px 20px;
+  background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); }
+.profile-bar .p-item { display:flex; flex-direction:column; gap:2px; }
+.profile-bar .p-label { font-size:.7rem; text-transform:uppercase; letter-spacing:.08em; color:var(--text-muted); }
+.profile-bar .p-value { font-weight:600; font-size:.9rem; color:var(--text); }
+.section-chips { margin-top:10px; display:flex; flex-wrap:wrap; gap:6px; }
+.chip { display:inline-block; padding:2px 10px; border-radius:12px; font-size:.78rem; font-weight:600; }
+.chip-on  { background:#1a2d1a; color:var(--accent3); border:1px solid #2a4a2a; }
+.chip-off { background:var(--surface2); color:var(--text-muted); border:1px solid var(--border); text-decoration:line-through; opacity:.6; }
 </style>
 </head>
 <body>
@@ -90,16 +120,52 @@ ul, ol { padding-left:22px; } li { margin-bottom:4px; } strong { color:#fff; }
   <div class="tldr">This paper proposes X that achieves Y by doing Z.</div>
 </div>
 
+<!-- Paper Profile — type, domain, and section presence chips -->
+<!-- Populate from innovations.md Paper Profile section + sections_detected frontmatter -->
+<div class="profile-bar">
+  <div class="p-item">
+    <span class="p-label">Type</span>
+    <span class="p-value">{PAPER_TYPE}</span>
+  </div>
+  <div class="p-item">
+    <span class="p-label">Domain</span>
+    <span class="p-value">{PRIMARY_DOMAIN}</span>
+  </div>
+  <div class="p-item" style="flex:1">
+    <span class="p-label">Sections</span>
+    <div class="section-chips">
+      <!-- For each section: chip-on if present, chip-off if absent -->
+      <!-- Always present: -->
+      <span class="chip chip-on">Problem</span>
+      <!-- Conditional — use chip-on or chip-off based on sections_detected: -->
+      <span class="chip chip-on">Theory</span>
+      <span class="chip chip-on">Contributions</span>
+      <span class="chip chip-on">Architecture</span>
+      <span class="chip chip-on">Loss</span>
+      <span class="chip chip-on">Training</span>
+      <span class="chip chip-off">Efficiency</span>
+      <span class="chip chip-on">Results</span>
+      <span class="chip chip-on">Ablation</span>
+      <span class="chip chip-off">Impl. Notes</span>
+      <span class="chip chip-on">Significance</span>
+    </div>
+  </div>
+</div>
+
+<!-- TOC: only list sections that are actually present in this paper -->
+<!-- Omit entries for absent sections (do NOT include chip-off sections in TOC) -->
 <nav class="toc">
   <h3>Contents</h3>
   <ol>
     <li><a href="#problem">Problem Statement</a></li>
+    <!-- [CONDITIONAL] <li><a href="#theory">Theoretical Analysis</a></li> -->
     <li><a href="#contributions">Core Contributions</a></li>
-    <li><a href="#architecture">Model Architecture</a></li>
-    <li><a href="#loss">Loss Design</a></li>
-    <li><a href="#training">Training Strategy</a></li>
+    <!-- [CONDITIONAL] <li><a href="#architecture">Model Architecture</a></li> -->
+    <!-- [CONDITIONAL] <li><a href="#loss">Loss Design</a></li> -->
+    <!-- [CONDITIONAL] <li><a href="#training">Training Strategy</a></li> -->
+    <!-- [CONDITIONAL] <li><a href="#efficiency">Efficiency Analysis</a></li> -->
     <li><a href="#results">Key Results</a></li>
-    <li><a href="#implementation">Implementation Notes</a></li>
+    <!-- [CONDITIONAL] <li><a href="#implementation">Implementation Notes</a></li> -->
   </ol>
 </nav>
 
@@ -112,10 +178,54 @@ ul, ol { padding-left:22px; } li { margin-bottom:4px; } strong { color:#fff; }
   <div class="card"><h3>Prior Art Limitations</h3><ul><li>Limitation 1</li><li>Limitation 2</li></ul></div>
 </section>
 
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- THEORETICAL ANALYSIS — CONDITIONAL                         -->
+<!-- Only render this section if sections_detected.theoretical  -->
+<!-- _analysis = true in innovations.md                         -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<section id="theory">
+  <div class="section-header">
+    <div class="section-icon icon-theory">∑</div>
+    <h2>Theoretical Analysis</h2>
+  </div>
+
+  <div class="card">
+    <h3>Theoretical Framework</h3>
+    <p>{What theoretical basis: variational inference / information theory / PAC-learning / optimal transport / etc.}</p>
+  </div>
+
+  <div class="theory-claim">
+    <div class="claim-label">Core Claim / Main Result</div>
+    <div class="claim-body">{Theorem 1 / Proposition / Key insight — quote from paper}</div>
+  </div>
+
+  <div class="card">
+    <h3>Key Derivation Steps</h3>
+    <div class="derivation">Starting from: {equation or assumption}
+   ↓  {technique: Jensen's inequality / substitution / integration / ...}
+{intermediate form}
+   ↓  {next step}
+Result: {final equation}</div>
+  </div>
+
+  <div class="card">
+    <h3>Assumptions & Conditions</h3>
+    <ul class="assumption-list">
+      <li>{Assumption 1 — standard vs restrictive?}</li>
+      <li>{Assumption 2}</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h3>Theory → Design Connection</h3>
+    <p>{How does this theoretical result directly justify the model design, loss choice, or training procedure?}</p>
+  </div>
+</section>
+
 <section id="contributions">
   <div class="section-header">
     <div class="section-icon icon-contrib">✨</div>
-    <h2>2. Core Contributions</h2>
+    <h2>Core Contributions</h2>
   </div>
   <div class="contribution">
     <div class="contrib-title">Contribution Name</div>
@@ -178,10 +288,49 @@ ul, ol { padding-left:22px; } li { margin-bottom:4px; } strong { color:#fff; }
   </table>
 </section>
 
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- EFFICIENCY ANALYSIS — CONDITIONAL                          -->
+<!-- Only render if sections_detected.efficiency_analysis=true  -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<section id="efficiency">
+  <div class="section-header">
+    <div class="section-icon icon-efficiency">⚡</div>
+    <h2>Efficiency Analysis</h2>
+  </div>
+
+  <div class="efficiency-grid">
+    <div class="efficiency-card">
+      <div class="e-label">Complexity</div>
+      <div class="e-value">{O(n·d) vs O(n²·d)}</div>
+      <div class="e-context">{key operation: attention / convolution / etc.}</div>
+    </div>
+    <div class="efficiency-card">
+      <div class="e-label">Parameters</div>
+      <div class="e-value">{XM params}</div>
+      <div class="e-context">{vs baseline: X× fewer}</div>
+    </div>
+    <div class="efficiency-card">
+      <div class="e-label">Throughput</div>
+      <div class="e-value">{X tok/s}</div>
+      <div class="e-context">{hardware context; X× speedup vs baseline}</div>
+    </div>
+    <div class="efficiency-card">
+      <div class="e-label">GPU Memory</div>
+      <div class="e-value">{X GB peak}</div>
+      <div class="e-context">{at batch size B}</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Scalability</h3>
+    <p>{How performance scales with data, model size, or compute. Scaling law results if reported.}</p>
+  </div>
+</section>
+
 <section id="results">
   <div class="section-header">
     <div class="section-icon icon-results">📊</div>
-    <h2>6. Key Results</h2>
+    <h2>Key Results</h2>
   </div>
   <table>
     <tr><th>Benchmark</th><th>Metric</th><th>This Paper</th><th>Prior SOTA</th><th>Delta</th></tr>

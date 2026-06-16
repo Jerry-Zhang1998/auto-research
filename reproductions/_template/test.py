@@ -15,6 +15,7 @@ Usage:
 import os
 import sys
 import argparse
+from typing import Optional, Tuple
 
 sys.path.insert(0, os.path.normpath(os.path.join(os.path.dirname(__file__), "..", "..")))
 
@@ -25,7 +26,7 @@ from src.base.base_evaluator import BaseEvaluator
 from src.utils.seed import set_seed
 
 
-def resolve_checkpoint(logs_root: str, run_name: str | None) -> tuple[str, str]:
+def resolve_checkpoint(logs_root: str, run_name: Optional[str]) -> Tuple[str, str]:
     """Returns (ckpt_path, run_name)."""
     if run_name:
         run_dir = os.path.join(logs_root, run_name)

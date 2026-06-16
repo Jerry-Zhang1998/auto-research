@@ -2,7 +2,7 @@
 import time
 import torch
 import torch.nn as nn
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional
 from torch.utils.data import DataLoader
 
@@ -10,7 +10,7 @@ from src.utils.logger import MetricLogger
 from src.utils.checkpoint import CheckpointManager
 
 
-class BaseTrainer:
+class BaseTrainer(ABC):
     """
     Subclass this and implement train_step() and eval_step().
 

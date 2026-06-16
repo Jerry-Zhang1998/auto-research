@@ -42,13 +42,23 @@ Loss modules must return a dict:
 ```
 This makes ablating individual loss terms easy.
 
-### Training Loop Must-Haves
-- `set_seed(config.seed)` at the start
-- Gradient clipping if the paper mentions it
-- LR warmup if the paper mentions it
+### Training Loop — What BaseTrainer Owns vs. What You Add
+
+`BaseTrainer` (in `src/base/base_trainer.py`) handles automatically:
 - `model.train()` / `model.eval()` toggling
-- Loss dict logging (log each term, not just total)
-- Save checkpoint: best (by val metric) + latest (every epoch)
+- `loss.backward()` + `optimizer.step()` + `optimizer.zero_grad()`
+- Gradient clipping (reads `config.train.grad_clip`)
+- Per-step metric logging via `MetricLogger`
+- Checkpoint saving: `ckpt_best.pt` + `ckpt_latest.pt`
+- LR scheduler stepping (once per epoch)
+
+**What `train.py` must still do**:
+- `set_seed(config.seed)` in the `__main__` block
+- Build the optimizer with the paper's LR + weight decay
+- Build the LR scheduler matching the paper (warmup + cosine / step / etc.)
+- Pass the right `task=` to `BaseTrainer.__init__` ("classification" or "regression")
+- `train_step` must return a dict with at least `"loss"` (scalar tensor); add `"logits"` [N,C] and `"targets"` [N] for automatic AUC/accuracy logging
+- `eval_step` must return `"logits"` [N,C] and `"targets"` [N] (scalars like `"loss"` are also averaged)
 
 ### When Paper Is Ambiguous
 Add a comment marking the assumption:

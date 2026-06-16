@@ -88,7 +88,15 @@ class BaseEvaluator:
     def _unpack(self, batch: Any):
         if isinstance(batch, (list, tuple)) and len(batch) >= 2:
             return batch[0], batch[1]
-        raise ValueError(f"Expected (inputs, targets) batch, got {type(batch)}")
+        if isinstance(batch, dict):
+            input_keys  = [k for k in batch if k in ("input", "inputs", "x", "image", "data")]
+            target_keys = [k for k in batch if k in ("label", "labels", "target", "targets", "y")]
+            if input_keys and target_keys:
+                return batch[input_keys[0]], batch[target_keys[0]]
+        raise ValueError(
+            f"Cannot unpack batch of type {type(batch)}. "
+            "Override _unpack() in your evaluator subclass to handle this batch format."
+        )
 
     def _to_device(self, x: Any) -> Any:
         if isinstance(x, torch.Tensor):

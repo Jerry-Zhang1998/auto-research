@@ -15,12 +15,15 @@ Output: JSON printed to stdout with fields:
     primary_frame  dict  best frame to fix (last user frame)
     raw_traceback  str   the original traceback block
 """
+import os
 import sys
 import re
 import json
 
-# Only flag frames from our own code (not site-packages / torch internals)
-USER_CODE_DIRS = ["reproductions/", "src/"]
+# Absolute path fragments that identify user code (not site-packages / torch internals).
+# Using os.path.abspath on each frame path before matching handles both relative paths
+# (e.g. ./model.py when run from reproductions/{name}/) and absolute paths.
+_USER_CODE_MARKERS = ["/reproductions/", "/src/"]
 
 
 def parse_log(text: str) -> dict:
@@ -66,10 +69,10 @@ def parse_log(text: str) -> dict:
             "code": fm.group(4).strip() if fm.group(4) else "",
         })
 
-    # Filter to user code
+    # Filter to user code — normalize to absolute path so relative frames match too
     user_frames = [
         f for f in all_frames
-        if any(d in f["file"] for d in USER_CODE_DIRS)
+        if any(m in os.path.abspath(f["file"]) for m in _USER_CODE_MARKERS)
     ]
 
     # Primary frame: last user frame, or last frame overall

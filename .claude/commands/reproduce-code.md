@@ -155,42 +155,12 @@ def get_dataloader(config: TrainConfig, split: str = "train") -> DataLoader:
 
 ### File: `reproductions/{name}/train.py`
 
-Complete training loop with:
-- Optimizer and LR scheduler matching the paper
-- Gradient clipping if mentioned
-- Logging (loss, metrics every N steps)
-- Checkpointing (save best + latest)
-- Evaluation loop
-- Reproducible seeding
+Thin `PaperTrainer(BaseTrainer)` subclass — only override `train_step` and `eval_step`.
+All loop logic (logging, checkpointing, LR stepping, gradient clipping, metric computation)
+is handled by `BaseTrainer` in `src/base/base_trainer.py`. Follow the pattern in
+`reproductions/_template/train.py` exactly.
 
-```python
-import torch
-import torch.nn as nn
-from torch.utils.data import DataLoader
-import os, json, time
-from typing import Optional
-from config import Config
-from model import {ModelClass}
-from loss import {LossClass}
-from dataset import get_dataloader
-
-def train(config: Config):
-    ...
-
-if __name__ == "__main__":
-    import argparse
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--config", type=str, default=None)
-    args = parser.parse_args()
-    config = Config()
-    train(config)
-```
-
----
-
-### File: `reproductions/{name}/train.py`
-
-Full training loop that integrates with `src/`. Must include:
+Must include:
 - `sys.path.insert(0, ...)` pointing to project root so `src/` is importable
 - `from src.utils.seed import set_seed`
 - `from src.utils.logger import MetricLogger` — writes to `logs/{name}/{run_name}/`
@@ -209,15 +179,14 @@ The `run_name` defaults to `run_YYYYMMDD_HHMMSS` so each run has its own log dir
 
 ### File: `reproductions/{name}/test.py`
 
-Standalone test / evaluation script. Must include:
+Uses `BaseEvaluator` from `src/base/base_evaluator.py`. Follow `reproductions/_template/test.py` exactly.
+Must include:
 - `sys.path.insert(0, ...)` pointing to project root
 - CLI args: `--run-name`, `--checkpoint` (direct path override), `--split` (test/val), `--task` (classification/regression)
 - Auto-resolves checkpoint: if no `--checkpoint` given, looks for `logs/{name}/{run_name}/ckpt_best.pt`; if no `--run-name`, picks the most recent run directory
-- Loads model weights via `CheckpointManager.load()`
-- Runs full pass over the test split with `torch.no_grad()`
-- Computes all metrics via `ClassificationMetrics.compute_all()` or `RegressionMetrics.compute_all()`
-- Prints a formatted results table
-- Saves results to `logs/{name}/{run_name}/test_results.json`
+- `evaluator.load_checkpoint(ckpt_path)` to restore model weights
+- `evaluator.evaluate(loader)` — returns full results: metrics + ROC/PR curves + confusion matrix
+- Saves results to `logs/{name}/{run_name}/test_results.json` via `evaluator.save_results()`
 
 ---
 

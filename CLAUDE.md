@@ -108,10 +108,11 @@ auto-research/
 │   ├── parse_errors.py        # parse Python traceback from log → JSON
 │   └── utils.py               # shared helpers
 └── prompts/
-    ├── parse_system.md        # section extraction prompt
-    ├── innovations_system.md  # innovation analysis prompt schema
-    ├── reproduce_system.md    # code generation instructions
-    └── html_report_system.md  # HTML design rules
+    ├── parse_system.md          # section extraction prompt
+    ├── innovations_system.md    # Round 2 (Systems Analyst) analysis guidance
+    ├── math_specialist_system.md # Round 1 (Math Specialist) notation-fidelity extraction
+    ├── reproduce_system.md      # code generation instructions
+    └── html_report_system.md    # HTML design rules
 ```
 
 ## Skills Quick Reference
