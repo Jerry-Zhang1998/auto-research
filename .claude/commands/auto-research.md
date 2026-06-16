@@ -73,6 +73,7 @@ Execute the full logic of the `/reproduce-code` skill inline. Framework is alway
 - Read `analyses/{name}/innovations.md` and `prompts/reproduce_system.md`
 - Create `outputs/{name}/reproduction/` directory
 - Generate all 7 files: config.py, model.py, loss.py, dataset.py, train.py, test.py, README.md
+- **Verify before moving on**: `python3 -m py_compile outputs/{name}/reproduction/*.py`, then smoke-test the model with a tiny config + dummy tensors (one forward + one loss, assert no NaN). Fix any error now. See `reproduce-code.md` Step 4.5.
 
 Print on completion:
 ```

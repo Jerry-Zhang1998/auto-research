@@ -17,7 +17,9 @@ Run `python3 scripts/fetch_paper.py "$ARG1" "$ARG2"`. This script will:
 - If the input is an arxiv URL or ID: download the PDF to `papers/{name}.pdf` and print metadata (title, authors, year, abstract)
 - If the input is a local PDF path: copy it to `papers/{name}.pdf` and print its path
 
-Read the script output to get the resolved `{name}` and `{pdf_path}`.
+Read the script output to get the resolved `{name}`, `{pdf_path}`, and the
+authoritative `{title}` / `{authors}` / `{year}` (for arxiv inputs these come from
+arxiv metadata and are more reliable than text-derived guesses).
 
 **Step 2 — Extract paper text.**
 
@@ -29,7 +31,11 @@ Create `analyses/{name}/` directory if it doesn't exist.
 
 Read the prompt template from `prompts/parse_system.md` for guidance on section extraction.
 
-Write `analyses/{name}/raw.md` following this exact schema:
+Write `analyses/{name}/raw.md` following this exact schema.
+
+**Title/authors/year source rule**: for arxiv inputs use the values from
+`fetch_paper.py` (Step 1) — they are authoritative. Only fall back to
+`parse_pdf.py`'s text-derived `title` for local PDFs where no metadata exists.
 
 ```
 ---
@@ -83,7 +89,7 @@ Run `python3 scripts/extract_figures.py papers/{name}.pdf analyses/{name}/`.
 The script outputs JSON with:
 - `total` — number of figures found
 - `figures` — list of `{index, file, page, width, height, caption}`
-- `arch_figure` — the figure most likely to be the architecture diagram, with `b64` (base64 PNG)
+- `arch_figure` — the likely architecture diagram: `{file, caption, b64_file, has_b64}`. The base64 PNG is written to the `b64_file` sidecar, NOT included in stdout.
 
 Add to the frontmatter of `analyses/{name}/raw.md` (update the file):
 ```yaml
@@ -92,6 +98,12 @@ arch_figure: analyses/{name}/figures/{arch_figure_filename}
 arch_caption: {arch_figure_caption}
 figure_count: {total}
 ```
+
+**Critical — never embed the base64 blob in raw.md.** Store only the figure
+*path* and *caption*. The base64 string (often 150K+ tokens) makes raw.md
+unreadable and is re-ingested by every downstream skill. The PNG is read directly
+from disk by `/generate-report` at HTML-build time — it does not need to live in
+raw.md. The `extract_figures.py` output writes b64 to a sidecar file, not stdout.
 
 If PyMuPDF is not installed, skip this step and note it in the confirm output.
 

@@ -1,8 +1,13 @@
 #!/usr/bin/env python3
 """
 Extract structured text from a PDF academic paper.
-Usage: python3 scripts/parse_pdf.py <pdf_path>
-Output: JSON with {title, abstract, sections, figures, tables, references_count, full_text}
+Usage: python3 scripts/parse_pdf.py <pdf_path> [--include-full-text]
+Output: JSON with {title, abstract, sections, figures, tables, references_count}
+
+By default `full_text` is omitted from the JSON: it duplicates the concatenation
+of `sections` (~10K redundant tokens for a typical paper) and the skill only needs
+`sections` to write raw.md. Pass --include-full-text to restore it if a downstream
+consumer needs the unsegmented text.
 
 Requires: pip install pdfplumber
 Falls back to basic text extraction if pdfplumber unavailable.
@@ -10,6 +15,7 @@ Falls back to basic text extraction if pdfplumber unavailable.
 import sys, os, re, json
 
 PDF_PATH = sys.argv[1] if len(sys.argv) > 1 else None
+INCLUDE_FULL_TEXT = "--include-full-text" in sys.argv[1:]
 
 # Section heading patterns for academic papers
 SECTION_PATTERNS = [
@@ -119,15 +125,17 @@ def parse_text(full_text: str) -> dict:
     ref_section = next((s for s in sections if re.match(r"References?", s["heading"], re.I)), None)
     references_count = len(re.findall(r"^\[\d+\]", ref_section["text"], re.MULTILINE)) if ref_section else 0
 
-    return {
+    result = {
         "title": title,
         "abstract": abstract,
         "sections": sections,
         "figures": [{"number": f[0], "caption": f[1]} for f in figures[:20]],
         "tables": [{"number": t[0], "caption": t[1]} for t in tables[:20]],
         "references_count": references_count,
-        "full_text": full_text,
     }
+    if INCLUDE_FULL_TEXT:
+        result["full_text"] = full_text
+    return result
 
 
 def main():

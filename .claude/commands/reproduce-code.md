@@ -245,6 +245,34 @@ find outputs/{name}/reproduction -type f | sort
 wc -l outputs/{name}/reproduction/*.py
 ```
 
+**Step 4.5 — Static + smoke verification (do not skip).**
+
+Catch syntax and shape bugs now, not at `/fix-reproduction` time.
+
+1. **Compile all files** (catches syntax errors):
+   ```bash
+   python3 -m py_compile outputs/{name}/reproduction/*.py && echo "OK: compiles"
+   ```
+
+2. **Smoke-test the model forward pass** with a tiny config and dummy tensors.
+   Write a throwaway script to `/tmp/smoke_{name}.py` that:
+   - inserts the reproduction dir on `sys.path`
+   - builds a *minimal* config (small dims/vocab/seq so it runs on CPU in <2s)
+   - instantiates the model, runs one forward pass on random/dummy input
+   - runs one loss computation on the output
+   - prints output shape + param count, asserts no NaN
+
+   ```bash
+   cd outputs/{name}/reproduction && python3 /tmp/smoke_{name}.py
+   ```
+
+   If it raises, **fix the generated code now** (shape mismatch, wrong arg, import
+   error) and re-run until it passes. Only dataset/IO code that needs real data on
+   disk is exempt — the model + loss must pass the smoke test before you confirm.
+
+   Report the smoke result in Step 5 (e.g. "smoke: forward [2,8,512]→logits OK,
+   65.0M params, loss=10.83").
+
 **Step 5 — Confirm.**
 
 Print:

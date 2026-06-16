@@ -254,16 +254,32 @@ def main():
     with open(manifest_path, "w") as fp:
         json.dump(manifest, fp, indent=2)
 
-    # Identify architecture figure and attach base64
+    # Identify architecture figure. Write its base64 to a SIDECAR FILE — never to
+    # stdout. The b64 string is ~150K+ tokens; dumping it to stdout floods the
+    # caller's context. /generate-report reads the PNG (or this sidecar) directly
+    # at HTML-build time. stdout carries only the path, caption, and a boolean.
     arch_fig = find_architecture_figure(figures)
     arch_out = None
     if arch_fig:
+        b64_path = os.path.join(output_dir, "figures", "arch_b64.txt")
         try:
             with open(arch_fig["file"], "rb") as fp:
                 b64 = base64.b64encode(fp.read()).decode()
-            arch_out = {**arch_fig, "b64": b64}
+            with open(b64_path, "w") as fp:
+                fp.write(b64)
+            arch_out = {
+                "file":     arch_fig["file"],
+                "caption":  arch_fig.get("caption", ""),
+                "b64_file": b64_path,
+                "has_b64":  True,
+            }
         except Exception as e:
-            arch_out = {**arch_fig, "b64": None, "error": str(e)}
+            arch_out = {
+                "file":    arch_fig["file"],
+                "caption": arch_fig.get("caption", ""),
+                "has_b64": False,
+                "error":   str(e),
+            }
 
     print(json.dumps({
         "total":        len(figures),

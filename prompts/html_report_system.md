@@ -2,6 +2,27 @@
 
 You are generating a self-contained HTML research summary report. Follow these rules strictly.
 
+## Encoding Pitfalls (read first — these recur on every paper)
+
+When the HTML is produced by a Python generator script, two encoding traps cause
+silently-broken output:
+
+1. **CSS `content:` never parses HTML entities.** Inside a `<style>` block, a CSS
+   `content` value like `content:"&#128161; TL;DR"` renders the *literal text*
+   `&#128161;`, not the 💡 glyph. In CSS you MUST use either:
+   - the literal unicode character: `content:"💡 TL;DR: "`, `content:"☐ "`, `content:"⟹ "`, or
+   - a CSS unicode escape: `content:"\1F4A1\00A0 TL;DR: "` (hex codepoint, `\00A0` = space).
+
+   HTML entities (`&#...;`, `&mdash;`, …) are ONLY valid in HTML body text, never in CSS.
+
+2. **HTML body text — prefer entities to dodge Python source-encoding issues.** In
+   the HTML body (not CSS), writing raw `×`, `√`, `→` inside a Python f-string or
+   heredoc can throw `SyntaxError: invalid character`. Use HTML entities there
+   instead: `&times;`, `&radic;`, `&#8594;`. Write the generator as a standalone
+   `.py` file (UTF-8) rather than an inline heredoc.
+
+In short: **CSS → literal char or `\xxxx`; HTML body → entity.** Never the reverse.
+
 ## Visual Design
 
 - **Dark theme only**: background `#0f1117`, surface `#1a1d27`, text `#e2e4f0`

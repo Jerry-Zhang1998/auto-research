@@ -48,9 +48,18 @@ Before generating the HTML, check for an extracted figure:
 python3 scripts/extract_figures.py papers/{name}.pdf analyses/{name}/
 ```
 
-Parse the JSON output and get `arch_figure`. If `arch_figure` has a `b64` field (non-null), you have a base64-encoded PNG to embed. Store it as `ARCH_B64` and `ARCH_CAPTION`.
+Parse the JSON output and get `arch_figure`. If `arch_figure.has_b64` is `true`,
+the base64 PNG lives in the sidecar file at `arch_figure.b64_file` (the blob is
+NOT in stdout — that would flood context). Record `ARCH_CAPTION` from
+`arch_figure.caption`.
 
-If `extract_figures.py` fails (PyMuPDF not installed), set `ARCH_B64 = null`. The architecture section will fall back to text-only.
+**Do not read the b64 sidecar or the PNG into your own context.** The HTML
+generator script (Step 4) reads the bytes directly from disk and base64-encodes
+them itself — exactly as `/tmp/gen_*_summary.py` does with
+`base64.b64encode(open(png,'rb').read())`. You only need the path and caption.
+
+If `extract_figures.py` fails (PyMuPDF not installed) or `has_b64` is false, the
+architecture section falls back to the ASCII diagram only (no `<img>`).
 
 **Step 4 — Generate `outputs/{name}/html/summary.html`.**
 
